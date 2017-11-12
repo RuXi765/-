@@ -1,0 +1,29 @@
+HttpWebRequest request = (HttpWebRequest)WebRequest.Create(@http://www.xxxx.com/checkLogin);
+string parms = string.Format("txtUser={0}&txtPass={1}&submit=", _username, _password);
+byte[] data = System.Text.Encoding.GetEncoding("GB2312").GetBytes(parms);
+
+//加入以下两句代码，能保留登录产生的Session数据，转到其它页时不会提示登录不成功
+CookieContainer cookie = new CookieContainer();
+request.CookieContainer = cookie;
+
+//设置提交格式为POST
+request.Method = "POST";
+request.ContentType = "application/x-www-form-urlencoded";
+request.ContentLength = data.Length;
+
+Stream writer = request.GetRequestStream();
+writer.Write(data, 0, data.Length);
+writer.Close();
+
+//获取请求回复数据
+HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+StreamReader reader = new StreamReader(response.GetResponseStream(), System.Text.Encoding.GetEncoding("GB2312"));
+string content = reader.ReadToEnd();
+
+return content;
+
+
+这里值得注意的是几点：
+1、在WebRequest.Create中使用的参数url必须是表单action的地址，即实际的提交地址。
+2、提交参数，如上面第2行，一定要把表单中的文本框等收集清楚，那些hidden的input也要写上，并且保持名称统一
+3、如果是模拟登录，在登录的过程中一般的应用程序都会向cookie或Session中写入数据，上面的第二段代表就是用于保留Session数据，如果没有此代码，即时登录成功，转到应用程序其它页面时，也会提示没有登录（因为验证不了登录信息）。如果只是提交表单数据，第二段代码可以省去。
